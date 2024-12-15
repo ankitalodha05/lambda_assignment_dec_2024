@@ -139,6 +139,140 @@ The assignment highlights the importance of automation in cloud environments, he
 
 
 
-
-
 ----------------------------------------------------------------------------------------------
+
+
+# Assignment 15:
+
+Implement a Log Cleaner for S3
+
+## Objective
+Create a Lambda function that automatically deletes logs in a specified S3 bucket that are older than 90 days.
+
+---
+
+## Instructions
+
+### Step 1: Create an S3 Bucket
+1. **Log in to the AWS Management Console**.
+2. **Navigate to the S3 service**.
+3. Click **'Create bucket'**:
+   - Enter a bucket name (e.g., `log-cleaner-bucket`).
+   - Choose a region.
+   - Leave other settings as default for simplicity.
+4. Click **'Create bucket'**.
+5. Test this Lambda function with 1-day-old logs. If it works for 1-day-old logs, it will work for 90-day-old logs also.
+6. I have uploaded a file name ankita.txt in my log_cleaner_bucket.I will test it after 24 hours(1 day).
+
+-![image](https://github.com/user-attachments/assets/aa566cd8-1c78-40f2-8915-93c37386c9a2)
+
+
+### Step 2: Create an IAM Role
+1. **Navigate to the IAM service**.
+2. Click **'Roles'** > **'Create role'**.
+3. Choose **'AWS Service'** > **'Lambda'** > Click **'Next'**.
+4. Attach the following managed policy:
+   - `AmazonS3FullAccess` (for simplicity; in production, restrict permissions).
+5. Name the role (e.g., `LogCleanerLambdaRole`) and create the role.
+
+-![image](https://github.com/user-attachments/assets/e8b23873-1e89-4651-bb94-50892298e913)
+
+
+### Step 3: Create a Lambda Function
+1. **Navigate to the Lambda service**.
+2. Click **'Create function'**:
+   - **Function name**: `LogCleanerFunction`.
+   - **Runtime**: `Python 3.x`.
+   - **Execution role**: Choose **'Use an existing role'** and select the role created in Step 2.
+3. Click **'Create function'**.
+
+![image](https://github.com/user-attachments/assets/04eb5f62-ea53-4ae8-9215-117157a29b7b)
+
+
+### Step 4: Add Environment Variables
+1. Open your Lambda function.
+2. Scroll down to the **'Environment variables'** section and click **'Edit'**.
+3. Add the following environment variable:
+   - **Key**: `BUCKET_NAME`
+   - **Value**: Name of your S3 bucket (e.g., `log-cleaner-bucket`).
+  
+-![image](https://github.com/user-attachments/assets/780d5c3f-89d9-4bf9-8712-124baa38c21c)
+
+
+### Step 5: Write the Lambda Function Code
+1. In the Lambda function, scroll to the **'Code source'** section.
+2. Replace the existing code with the following:
+
+```python
+import boto3
+import os
+from datetime import datetime, timezone, timedelta
+
+def lambda_handler(event, context):
+    # Get the bucket name from environment variable
+    bucket_name = os.environ['BUCKET_NAME']
+    days_to_keep = 90  # Number of days to retain logs
+
+    # Initialize S3 client
+    s3_client = boto3.client('s3')
+    bucket_objects = s3_client.list_objects_v2(Bucket=bucket_name)
+
+    if 'Contents' not in bucket_objects:
+        return {"status": "No logs found to clean"}
+
+    # Calculate the cutoff date
+    cutoff_date = datetime.now(timezone.utc) - timedelta(days=days_to_keep)
+
+    # Iterate over objects and delete if older than cutoff date
+    deleted_count = 0
+    for obj in bucket_objects['Contents']:
+        last_modified = obj['LastModified']
+        if last_modified < cutoff_date:
+            s3_client.delete_object(Bucket=bucket_name, Key=obj['Key'])
+            deleted_count += 1
+
+    return {
+        "status": "Log cleaning completed",
+        "deleted_logs_count": deleted_count
+    }
+```
+
+3. Click **'Deploy'**.
+
+-![image](https://github.com/user-attachments/assets/6cdaf4aa-76f3-4577-b3b8-01eb303c8083)
+
+In the given screenshot- i have tested this code with 1 day older logs.
+
+### Step 6: Test the Lambda Function
+1. Click **'Test'** and create a new test event:
+   - **Event template**: `Hello World`.
+   - **Name**: `TestEvent`.
+   - **Payload**: `{}`.
+2. Click **'Test'** to run the function.
+-![image](https://github.com/user-attachments/assets/44de3988-595c-4383-87f1-e7d5b84a16ce)
+
+3. Check the logs in **'Amazon CloudWatch Logs'** to verify that logs older than 1 day are being deleted.
+-![image](https://github.com/user-attachments/assets/93b66c1a-279f-4c8f-be50-0012d2131a91)
+
+4. It is working fine on 1 day old logs , So we can change our code accordingly, If we want to delete logs older then 90 days, mention it in code.
+
+
+
+### Step 7: Schedule the Lambda Function
+1. **Navigate to Amazon EventBridge**.
+-![image](https://github.com/user-attachments/assets/068ec99d-5d84-4de3-bfea-5eb57a43074b)
+
+
+3. Click **'Create rule'**:
+   - **Name**: `WeeklyLogCleaner`.
+   - **Event Source**: `Schedule`.
+   - **Schedule Expression**: `cron(0 0 ? * 1 *)` (Runs every Monday at midnight UTC).
+4. Under **'Targets'**, select **'Lambda function'**.
+5. Choose the Lambda function (`LogCleanerFunction`) and click **'Create`**.
+![image](https://github.com/user-attachments/assets/10bbd4cf-b8a6-4f48-a655-3169a29eb974)
+
+
+---
+
+## Summary
+This document outlines the steps to create and schedule a Lambda function to automatically delete logs older than 90 days in a specified S3 bucket. By following the above steps, you will have an automated process to manage log retention in your S3 bucket.
