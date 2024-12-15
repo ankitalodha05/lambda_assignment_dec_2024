@@ -106,6 +106,7 @@ def lambda_handler(event, context):
 3. Go to the EC2 dashboard and confirm:
    - Instances tagged `Auto-Stop` should stop.
    - Instances tagged `Auto-Start` should start.
+
 -![image](https://github.com/user-attachments/assets/36660d15-cea3-4056-b2c2-837ce49d5ac1)
 
 -![image](https://github.com/user-attachments/assets/e69eff51-2949-4f8b-8a9d-eaba64d20461)
@@ -113,6 +114,29 @@ def lambda_handler(event, context):
 -![image](https://github.com/user-attachments/assets/e2a33e6f-e338-4a0c-9b86-003dc771c183)
 
 -![image](https://github.com/user-attachments/assets/6da5a58d-e84e-4e2b-b571-4fe061e09dda)
+
+## Deliverables
+1. A screenshot of the EC2 instances before and after Lambda execution, showing their states.
+2. The Python code of the Lambda function.
+3. A brief report summarizing the steps taken and any challenges faced during the assignment.
+
+---
+
+## Notes
+- Use the AWS free-tier resources to avoid incurring costs.
+- Ensure the IAM role for Lambda has the required permissions for the described tasks.
+- Validate the tags properly before performing actions to avoid unintended behavior.
+
+---
+
+## Conclusion
+This assignment provided hands-on experience with AWS Lambda and Boto3, demonstrating the power of automation in managing AWS resources. By successfully completing the task, you learned how to:
+1. Use AWS tags to categorize and manage EC2 instances.
+2. Write Python scripts leveraging Boto3 to perform operations on EC2 instances.
+3. Configure IAM roles and policies to enable secure interactions between Lambda and AWS services.
+
+The assignment highlights the importance of automation in cloud environments, helping streamline operational tasks, improve efficiency, and reduce human error.
+
 
 
 
