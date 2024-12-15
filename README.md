@@ -276,3 +276,61 @@ In the given screenshot- i have tested this code with 1 day older logs.
 
 ## Summary
 This document outlines the steps to create and schedule a Lambda function to automatically delete logs older than 90 days in a specified S3 bucket. By following the above steps, you will have an automated process to manage log retention in your S3 bucket.
+
+----------------------------------------------------------------------------------------------------------
+
+# Assignment 14:
+Monitor EC2 Instance State Changes Using AWS Lambda, Boto3, and SNS
+
+## Objective
+Implement a system to monitor EC2 instance state changes and send notifications via SNS when instances are started or stopped.
+
+## Steps
+
+### Step 1: Set Up SNS
+1. Create a new SNS topic in the AWS Management Console.
+2. Subscribe your email to the topic and confirm the subscription.
+
+### Step 2: Create an IAM Role for Lambda
+1. Create a role with permissions for EC2 state monitoring and SNS publishing.
+2. Attach `AmazonEC2ReadOnlyAccess` and `AmazonSNSFullAccess` policies or a custom policy.
+
+### Step 3: Develop the Lambda Function
+1. Create a Lambda function with Python 3.x runtime.
+2. Assign the IAM role created earlier.
+3. Use the following code to handle EC2 state change events:
+
+    ```python
+    import json
+    import boto3
+
+    def lambda_handler(event, context):
+        sns_client = boto3.client('sns')
+        sns_topic_arn = '<YOUR_SNS_TOPIC_ARN>'
+
+        detail = event['detail']
+        instance_id = detail['instance-id']
+        state = detail['state']
+
+        message = f"EC2 Instance {instance_id} is now {state}."
+        sns_client.publish(TopicArn=sns_topic_arn, Message=message, Subject='EC2 State Change Notification')
+    ```
+4. Replace `<YOUR_SNS_TOPIC_ARN>` with your SNS topic ARN and deploy the function.
+
+### Step 4: Configure EventBridge
+1. Create an EventBridge rule to trigger the Lambda function on EC2 state changes.
+2. Set the event source to `AWS services > EC2` and select `EC2 Instance State-change Notification`.
+3. Add the Lambda function as the target.
+
+### Step 5: Test the Setup
+1. Start or stop an EC2 instance.
+2. Verify that you receive an email notification about the state change.
+
+### Troubleshooting
+- **No Notifications**: Ensure the email subscription is confirmed and permissions are correctly set.
+- **Lambda Errors**: Verify the SNS topic ARN and Lambda IAM permissions.
+- **EventBridge Issues**: Check if the rule is active and properly configured.
+
+### Cleanup (Optional)
+1. Delete the Lambda function, EventBridge rule, and SNS topic if no longer needed.
+2. Remove the IAM role if it is no longer required.
