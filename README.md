@@ -55,7 +55,8 @@ You are tasked with automating the stopping and starting of EC2 instances based 
    - Describe instances with `Auto-Stop` and `Auto-Start` tags.
    - Stop the `Auto-Stop` instances and start the `Auto-Start` instances.
    - Print the affected instance IDs for logging purposes.
--
+-![image](https://github.com/user-attachments/assets/16db616e-3024-4610-ab2d-48e7ede2b8ff)
+
 #### Example Code
 ```python
 import boto3
@@ -105,5 +106,5 @@ def lambda_handler(event, context):
 3. Go to the EC2 dashboard and confirm:
    - Instances tagged `Auto-Stop` should stop.
    - Instances tagged `Auto-Start` should start.
-
+-
 ----------------------------------------------------------------------------------------------
