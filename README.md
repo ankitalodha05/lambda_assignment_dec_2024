@@ -106,5 +106,15 @@ def lambda_handler(event, context):
 3. Go to the EC2 dashboard and confirm:
    - Instances tagged `Auto-Stop` should stop.
    - Instances tagged `Auto-Start` should start.
--
+-![image](https://github.com/user-attachments/assets/36660d15-cea3-4056-b2c2-837ce49d5ac1)
+
+-![image](https://github.com/user-attachments/assets/e69eff51-2949-4f8b-8a9d-eaba64d20461)
+
+-![image](https://github.com/user-attachments/assets/e2a33e6f-e338-4a0c-9b86-003dc771c183)
+
+-![image](https://github.com/user-attachments/assets/6da5a58d-e84e-4e2b-b571-4fe061e09dda)
+
+
+
+
 ----------------------------------------------------------------------------------------------
