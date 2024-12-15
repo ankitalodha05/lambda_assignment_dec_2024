@@ -35,12 +35,16 @@ You are tasked with automating the stopping and starting of EC2 instances based 
    - Second instance:
      - Key: `Action`
      - Value: `Auto-Start`
+-![image](https://github.com/user-attachments/assets/5a91852c-1e5f-4bda-9ee8-4f6a85010ce2)
+
 
 ### 2. Lambda IAM Role
 1. Go to the IAM dashboard.
 2. Create a new role for Lambda.
 3. Attach the `AmazonEC2FullAccess` policy to this role.
    - **Note**: In a real-world scenario, limit permissions for better security.
+-![image](https://github.com/user-attachments/assets/df9d0577-40ab-4127-bfde-1e0a0dd16aa1)
+
 
 ### 3. Lambda Function
 1. Navigate to the Lambda dashboard and create a new function.
@@ -51,7 +55,7 @@ You are tasked with automating the stopping and starting of EC2 instances based 
    - Describe instances with `Auto-Stop` and `Auto-Start` tags.
    - Stop the `Auto-Stop` instances and start the `Auto-Start` instances.
    - Print the affected instance IDs for logging purposes.
-
+-
 #### Example Code
 ```python
 import boto3
