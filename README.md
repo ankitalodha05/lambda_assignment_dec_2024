@@ -315,18 +315,35 @@ Implement a system to monitor EC2 instance state changes and send notifications 
 
     ```python
     import json
-    import boto3
+import boto3
 
-    def lambda_handler(event, context):
-        sns_client = boto3.client('sns')
-        sns_topic_arn = '<YOUR_SNS_TOPIC_ARN>'
+def lambda_handler(event, context):
+    try:
+        # Log the event for debugging
+        print("Received event:", json.dumps(event, indent=2))
 
-        detail = event['detail']
-        instance_id = detail['instance-id']
-        state = detail['state']
+        # Extract details from the event
+        detail = event.get('detail', {})
+        instance_id = detail.get('instance-id', 'Unknown')
+        state = detail.get('state', 'Unknown')
 
+        # Prepare the message
         message = f"EC2 Instance {instance_id} is now {state}."
-        sns_client.publish(TopicArn=sns_topic_arn, Message=message, Subject='EC2 State Change Notification')
+        print(message)
+
+        # Publish the message to SNS
+        sns_client = boto3.client('sns')
+        sns_topic_arn = 'arn:aws:sns:us-east-1:225989348530:EC2StateChangeTopic'
+        response = sns_client.publish(
+            TopicArn=sns_topic_arn,
+            Message=message,
+            Subject='EC2 State Change Notification'
+        )
+        print("SNS Response:", response)
+
+    except Exception as e:
+        print("Error:", str(e))
+        raise
     ```
 5. Replace `<YOUR_SNS_TOPIC_ARN>` with your SNS topic ARN and deploy the function.
 
@@ -340,9 +357,12 @@ Implement a system to monitor EC2 instance state changes and send notifications 
 
 ### Step 5: Test the Setup
 1. Start or stop an EC2 instance.
--![image](https://github.com/user-attachments/assets/f06447b4-f597-48d8-98b6-42d895a813b5)
+-![image](https://github.com/user-attachments/assets/1c9197ef-66c7-430d-91bb-c51175e0ccf2)
 
-2. Verify that you receive an email notification about the state change.
+
+3. Verify that you receive an email notification about the state change.
+-![image](https://github.com/user-attachments/assets/164e4e54-c1a6-4f96-aff7-a86668a32cb8)
+
 
 ### Troubleshooting
 - **No Notifications**: Ensure the email subscription is confirmed and permissions are correctly set.
@@ -352,3 +372,6 @@ Implement a system to monitor EC2 instance state changes and send notifications 
 ### Cleanup (Optional)
 1. Delete the Lambda function, EventBridge rule, and SNS topic if no longer needed.
 2. Remove the IAM role if it is no longer required.
+
+----------------------------------------------------------------------------------
+
