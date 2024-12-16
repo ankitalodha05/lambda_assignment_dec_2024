@@ -374,4 +374,211 @@ def lambda_handler(event, context):
 2. Remove the IAM role if it is no longer required.
 
 ----------------------------------------------------------------------------------
+# Assignment 5: Auto-Tagging EC2 Instances on Launch Using AWS Lambda and Boto3
+
+## Objective
+Learn to automate the tagging of EC2 instances as soon as they are launched, ensuring better resource tracking and management.
+
+---
+
+## Task
+Automatically tag any newly launched EC2 instance with the current date and a custom tag.
+
+---
+
+## Instructions
+
+### 1. EC2 Setup
+Ensure you have the capability to launch EC2 instances.
+
+### 2. Lambda IAM Role
+1. Navigate to the IAM dashboard and create a new role for Lambda.
+-![image](https://github.com/user-attachments/assets/e32b0b0a-ea9d-459a-ae7c-947bf418e746)
+
+3. Attach the `AmazonEC2FullAccess` policy to this role.
+4. create an inline policy-
+The AllowEC2CreateTags policy allows tagging EC2 instances using ec2:CreateTags for all instances across any region and account. It is used to automate tagging in workflows like Lambda.
+![image](https://github.com/user-attachments/assets/9a0b3e57-d036-4338-8fae-a8d0e332cb50)
+
+-
+
+---
+
+### 3. Lambda Function
+1. Navigate to the Lambda dashboard and create a new function.
+2. Choose Python 3.x as the runtime.
+3. Assign the IAM role created in the previous step.
+4. Replace the default code with the following:
+
+```python
+import json
+import boto3
+import datetime
+
+def lambda_handler(event, context):
+    # Initialize EC2 client
+    ec2_client = boto3.client('ec2')
+
+    try:
+        # Log the incoming event for debugging
+        print("Received event:", json.dumps(event, indent=2))
+
+        # Extract the instance ID from the event
+        if 'detail' in event and 'instance-id' in event['detail']:
+            instance_id = event['detail']['instance-id']
+        else:
+            raise KeyError("The event does not contain the required 'detail' or 'instance-id' keys.")
+
+        # Get the current date
+        current_date = datetime.datetime.now().strftime('%Y-%m-%d')
+
+        # Define the tags
+        tags = [
+            {'Key': 'LaunchDate', 'Value': current_date},
+            {'Key': 'Owner', 'Value': 'AutoTagging'}
+        ]
+
+        # Apply tags to the EC2 instance
+        response = ec2_client.create_tags(Resources=[instance_id], Tags=tags)
+
+        # Log the success
+        print(f"Successfully tagged instance {instance_id} with tags: {tags}")
+
+        return {
+            'statusCode': 200,
+            'body': f"Tags applied successfully to instance {instance_id}: {tags}"
+        }
+
+    except KeyError as e:
+        # Handle missing keys in the event
+        print(f"KeyError: {str(e)}")
+        return {
+            'statusCode': 400,
+            'body': f"Invalid event structure: {str(e)}"
+        }
+
+    except Exception as e:
+        # Catch all other exceptions
+        print(f"Unexpected error: {str(e)}")
+        return {
+            'statusCode': 500,
+            'body': f"Failed to apply tags: {str(e)}"
+        }
+```
+
+5. Deploy the code to save the function.
+-![image](https://github.com/user-attachments/assets/74757127-d45f-4263-b0f6-9eed031c6927)
+
+
+---
+
+### 4. CloudWatch Events
+1. Go to the EventBridge Console.
+
+2. Create a New Rule:
+    - **Name**: `TagEC2OnLaunch`.
+    - **Event Pattern**:
+        - **Event source**: AWS services → EC2.
+        - **Event type**: EC2 Instance State-change Notification.
+        - Add a filter for `state: running` in the Event Pattern section.
+
+
+3. Final Event Pattern JSON:
+
+```json
+{
+    "source": ["aws.ec2"],
+    "detail-type": ["EC2 Instance State-change Notification"],
+    "detail": {
+        "state": ["running"]
+    }
+}
+```
+
+4. Set the Target:
+    - Attach the Lambda function created earlier (`AutoTagEC2Instance`).
+
+5. Save and enable the rule.
+-![image](https://github.com/user-attachments/assets/c44c02d4-c405-4003-9ea6-88111a56ec1a)
+
+
+---
+
+## Testing
+
+### Manual Test
+1. Go to the **Test** tab in Lambda.
+2. Use the following test event:
+
+```json
+{
+    "version": "0",
+    "id": "abcd1234-5678-90ab-cdef-EXAMPLE",
+    "detail-type": "EC2 Instance State-change Notification",
+    "source": "aws.ec2",
+    "account": "123456789012",
+    "time": "2024-12-14T12:34:56Z",
+    "region": "us-east-1",
+    "resources": ["arn:aws:ec2:us-east-1:123456789012:instance/i-0bcf4a6cdc4d9fe57"],
+    "detail": {
+        "instance-id": "i-0bcf4a6cdc4d9fe57",
+        "state": "running"
+    }
+}
+```
+
+- Replace `i-0bcf4a6cdc4d9fe57` with a valid instance ID.
+- Run the test and confirm tags are applied.
+
+### Dynamic Test
+1. Launch a new EC2 instance from the EC2 Dashboard.
+2. Check the **Tags** tab for the instance to confirm the tags are applied automatically.
+-![image](https://github.com/user-attachments/assets/a72ec2b8-c75b-4146-819f-197d9d4f2cf5)
+![image](https://github.com/user-attachments/assets/f5cbd491-b264-4c75-aca9-6735194a4888)
+
+
+
+---
+
+## Troubleshooting
+
+### Issue: `KeyError: 'detail'`
+- **Cause**: The event structure does not contain the required `detail` or `instance-id` keys.
+- **Solution**: Verify the EventBridge rule's event pattern matches the expected format.
+
+### Issue: `InvalidID when calling CreateTags`
+- **Cause**: The `instance-id` in the event does not exist in your account.
+- **Solution**: Use a valid instance ID and ensure the EC2 instance exists.
+
+### Issue: `UnauthorizedOperation`
+- **Cause**: The IAM role lacks sufficient permissions to tag the instance.
+- **Solution**: Attach the `AmazonEC2FullAccess` policy or a custom policy with `ec2:CreateTags` permission.
+
+---
+
+## Clean Up Resources
+
+1. **Terminate EC2 Instances**:
+    - Go to the EC2 Dashboard → Select and terminate the test instances.
+
+2. **Delete Resources**:
+    - Delete the Lambda function.
+    - Delete the EventBridge rule.
+
+---
+
+## References
+
+### Boto3 Create Tags Command
+```python
+response = ec2_client.create_tags(Resources=[instance_id], Tags=tags)
+```
+
+### AWS CLI to Tag an Instance Manually
+```bash
+aws ec2 create-tags --resources i-0bcf4a6cdc4d9fe57 --tags Key=LaunchDate,Value=2024-12-14 Key=Owner,Value=AutoTagging
+```
+
+
+
 
