@@ -289,15 +289,28 @@ Implement a system to monitor EC2 instance state changes and send notifications 
 
 ### Step 1: Set Up SNS
 1. Create a new SNS topic in the AWS Management Console.
+-![image](https://github.com/user-attachments/assets/d500e7fe-856c-463f-ab36-361e6e0a9c6f)
+
 2. Subscribe your email to the topic and confirm the subscription.
+-![image](https://github.com/user-attachments/assets/56c84a52-83e5-4d8f-ba7a-c8224fb41a3f)
+
+-![image](https://github.com/user-attachments/assets/ab419c45-0a1f-4b0c-ae5d-282646a5465b)
+
+
 
 ### Step 2: Create an IAM Role for Lambda
 1. Create a role with permissions for EC2 state monitoring and SNS publishing.
-2. Attach `AmazonEC2ReadOnlyAccess` and `AmazonSNSFullAccess` policies or a custom policy.
+-![image](https://github.com/user-attachments/assets/9964186d-7d32-4ea5-9e6f-2946d685b665)
+
+2. Attach `AmazonEC2ReadOnlyAccess` and `AmazonSNSFullAccess` policies and added one custom policy SNSpublish.
+-![image](https://github.com/user-attachments/assets/25e073d4-23e5-4206-ba1a-c378cb270aa9)
+
 
 ### Step 3: Develop the Lambda Function
 1. Create a Lambda function with Python 3.x runtime.
 2. Assign the IAM role created earlier.
+-![image](https://github.com/user-attachments/assets/91fa0f14-4574-4cce-9459-6785778e0218)
+
 3. Use the following code to handle EC2 state change events:
 
     ```python
@@ -315,15 +328,20 @@ Implement a system to monitor EC2 instance state changes and send notifications 
         message = f"EC2 Instance {instance_id} is now {state}."
         sns_client.publish(TopicArn=sns_topic_arn, Message=message, Subject='EC2 State Change Notification')
     ```
-4. Replace `<YOUR_SNS_TOPIC_ARN>` with your SNS topic ARN and deploy the function.
+5. Replace `<YOUR_SNS_TOPIC_ARN>` with your SNS topic ARN and deploy the function.
 
 ### Step 4: Configure EventBridge
 1. Create an EventBridge rule to trigger the Lambda function on EC2 state changes.
 2. Set the event source to `AWS services > EC2` and select `EC2 Instance State-change Notification`.
+-![image](https://github.com/user-attachments/assets/5cd49212-4309-4ec8-8d31-6ca80100a05f)
 3. Add the Lambda function as the target.
+-![image](https://github.com/user-attachments/assets/681d8b4b-0275-41d6-aef0-e6eff6ea6b2b)
+
 
 ### Step 5: Test the Setup
 1. Start or stop an EC2 instance.
+-![image](https://github.com/user-attachments/assets/f06447b4-f597-48d8-98b6-42d895a813b5)
+
 2. Verify that you receive an email notification about the state change.
 
 ### Troubleshooting
